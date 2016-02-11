@@ -1,7 +1,1 @@
-require "rake/stretcher/version"
-
-module Rake
-  module Stretcher
-    # Your code goes here...
-  end
-end
+load File.expand_path("../../rake/stretcher/tasks/stretcher.rake", __FILE__)
