@@ -93,14 +93,6 @@ namespace :stretcher do
     config['consul_host']
   end
 
-  desc "Create tarball"
-  task :archive_project =>
-  [:ensure_directories, :checkout_local,
-   :bundle, :assets_precompile,
-   :create_tarball, :upload_tarball,
-   :create_and_upload_manifest
-  ]
-
   desc "ensure directories"
   task :ensure_directories do
     %x(
