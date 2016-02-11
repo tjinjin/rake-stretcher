@@ -49,12 +49,12 @@ namespace :stretcher do
     '--exclude tmp'
   end
 
-  def rails_env
-    config['rails_env'] ||= ENV['RAILS_ENV']
+  def environment
+    config['environment'] ||= ENV['environment']
   end
 
-  def local_tarball_name
-    config['local_tarball_name']
+  def tarball_name
+    config['tarball_name']
   end
 
   def stretcher_path
@@ -62,11 +62,11 @@ namespace :stretcher do
   end
 
   def stretcher_src
-    "#{stretcher_path}/rails-application-#{time_now}.tgz"
+    "#{stretcher_path}/#{remote_tarball_name}-#{time_now}.tgz"
   end
 
   def checksum
-    %x(openssl sha256 #{local_tarball_path}/current/#{local_tarball_name} | awk -F' ' '{print $2}').chomp
+    %x(openssl sha256 #{local_tarball_path}/current/#{tarball_name} | awk -F' ' '{print $2}').chomp
   end
 
   def deploy_to
@@ -130,7 +130,7 @@ namespace :stretcher do
       cd #{local_build_path}
       mkdir -p "#{local_tarball_path}/#{time_now}"
       tar -cf - --exclude tmp --exclude spec ./ | gzip -9 > \
-        #{local_tarball_path}/#{time_now}/#{local_tarball_name}
+        #{local_tarball_path}/#{time_now}/#{tarball_name}
     EOC
     sh <<-EOC
       cd #{local_tarball_path}
@@ -142,7 +142,7 @@ namespace :stretcher do
   desc "upload tarball to s3"
   task :upload_tarball do
     sh <<-EOC
-      aws s3 cp #{local_tarball_path}/current/#{local_tarball_name} #{stretcher_src}
+      aws s3 cp #{local_tarball_path}/current/#{tarball_name} #{stretcher_src}
     EOC
   end
 
@@ -159,10 +159,10 @@ namespace :stretcher do
       end
       p tempfile_path
       sh <<-EOC
-       mv  #{tempfile_path} "#{local_tarball_path}/current/manifest_#{role}_#{rails_env}_#{time_now}.yml"
+       mv  #{tempfile_path} "#{local_tarball_path}/current/manifest_#{role}_#{environment}_#{time_now}.yml"
       EOC
       sh <<-EOC
-        aws s3 cp "#{local_tarball_path}/current/manifest_#{role}_#{rails_env}_#{time_now}.yml" "#{manifest_path}/manifest_#{role}_#{rails_env}_#{time_now}.yml"
+        aws s3 cp "#{local_tarball_path}/current/manifest_#{role}_#{environment}_#{time_now}.yml" "#{manifest_path}/manifest_#{role}_#{environment}_#{time_now}.yml"
       EOC
     end
   end
@@ -170,11 +170,11 @@ namespace :stretcher do
   desc "kick start consul event"
   task :kick_start do
     deploy_roles.each do |role|
-      o, e, s = Open3.capture3("aws s3 ls #{manifest_path}/manifest_#{role}_#{rails_env} | awk -F' ' '{print $4}' | tail -1")
+      o, e, s = Open3.capture3("aws s3 ls #{manifest_path}/manifest_#{role}_#{environment} | awk -F' ' '{print $4}' | tail -1")
       current_manifest = o.chomp
       puts "kick start -> #{current_manifest}"
       sh <<-EOC
-        curl -X PUT -d "#{manifest_path}/#{current_manifest}" http://#{consul_host}:8500/v1/event/fire/deploy_#{role}_#{rails_env}\?pretty
+        curl -X PUT -d "#{manifest_path}/#{current_manifest}" http://#{consul_host}:8500/v1/event/fire/deploy_#{role}_#{environment}\?pretty
       EOC
     end
   end
@@ -182,11 +182,11 @@ namespace :stretcher do
   desc "rollback consul event"
   task :rollback do
     deploy_roles.each do |role|
-      o, e, s = Open3.capture3("aws s3 ls #{manifest_path}/manifest_#{role}_#{rails_env} | awk -F' ' '{print $4}' | tail -2 | head -1")
+      o, e, s = Open3.capture3("aws s3 ls #{manifest_path}/manifest_#{role}_#{environment} | awk -F' ' '{print $4}' | tail -2 | head -1")
       current_manifest = o.chomp
       puts "kick start -> #{current_manifest}"
       sh <<-EOC
-        curl -X PUT -d "#{manifest_path}/#{current_manifest}" http://#{consul_host}:8500/v1/event/fire/deploy_#{role}_#{rails_env}\?pretty
+        curl -X PUT -d "#{manifest_path}/#{current_manifest}" http://#{consul_host}:8500/v1/event/fire/deploy_#{role}_#{environment}\?pretty
       EOC
     end
   end
