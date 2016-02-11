@@ -38,7 +38,7 @@ namespace :stretcher do
   end
 
   def branch
-    ENV['CIRCLE_BRANCH'] ||= 'master'
+    config['branch'] ||= 'master'
   end
 
   def current_version
