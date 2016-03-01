@@ -50,7 +50,7 @@ namespace :stretcher do
   end
 
   def environment
-    config['environment'] ||= 'master'
+    ENV['DEPLOY_ENV'] ||= config['environment']
   end
 
   def tarball_name
