@@ -159,10 +159,11 @@ namespace :stretcher do
       end
       p tempfile_path
       sh <<-EOC
-       mv  #{tempfile_path} "#{local_tarball_path}/current/manifest_#{role}_#{environment}_#{time_now}.yml"
+       mv  #{tempfile_path} "#{local_tarball_path}/current/manifest_#{role}_#{environment}.yml"
       EOC
       sh <<-EOC
-        aws s3 cp "#{local_tarball_path}/current/manifest_#{role}_#{environment}_#{time_now}.yml" "#{manifest_path}/manifest_#{role}_#{environment}_#{time_now}.yml"
+        aws s3 mv "#{manifest_path}/manifest_#{role}_#{environment}.yml" "#{manifest_path}/manifest_#{role}_#{environment}_rollback.yml"
+        aws s3 cp "#{local_tarball_path}/current/manifest_#{role}_#{environment}.yml" "#{manifest_path}/manifest_#{role}_#{environment}.yml"
       EOC
     end
   end
@@ -170,11 +171,9 @@ namespace :stretcher do
   desc "kick start consul event"
   task :kick_start do
     deploy_roles.each do |role|
-      o, e, s = Open3.capture3("aws s3 ls #{manifest_path}/manifest_#{role}_#{environment} | awk -F' ' '{print $4}' | tail -1")
-      current_manifest = o.chomp
-      puts "kick start -> #{current_manifest}"
+      puts "kick start -> manifest_#{role}_#{environment}.yml"
       sh <<-EOC
-        curl -X PUT -d "#{manifest_path}/#{current_manifest}" http://#{consul_host}:8500/v1/event/fire/deploy_#{role}_#{environment}\?pretty
+        curl -X PUT -d "#{manifest_path}/manifest_#{role}_#{environment}.yml" http://#{consul_host}:8500/v1/event/fire/deploy_#{role}_#{environment}\?pretty
       EOC
     end
   end
@@ -182,11 +181,9 @@ namespace :stretcher do
   desc "rollback consul event"
   task :rollback do
     deploy_roles.each do |role|
-      o, e, s = Open3.capture3("aws s3 ls #{manifest_path}/manifest_#{role}_#{environment} | awk -F' ' '{print $4}' | tail -2 | head -1")
-      current_manifest = o.chomp
-      puts "kick start -> #{current_manifest}"
+      puts "kick start -> manifest_#{role}_#{environment}_rollback.yml"
       sh <<-EOC
-        curl -X PUT -d "#{manifest_path}/#{current_manifest}" http://#{consul_host}:8500/v1/event/fire/deploy_#{role}_#{environment}\?pretty
+        curl -X PUT -d "#{manifest_path}/manifest_#{role}_#{environment}_rollback.yml" http://#{consul_host}:8500/v1/event/fire/deploy_#{role}_#{environment}\?pretty
       EOC
     end
   end
