@@ -57,14 +57,6 @@ namespace :stretcher do
     config['tarball_name']
   end
 
-  def stretcher_path
-    config['stretcher_path']
-  end
-
-  def stretcher_src
-    "#{stretcher_path}/#{tarball_name}"
-  end
-
   def checksum
     %x(openssl sha256 #{local_tarball_path}/current/#{tarball_name} | awk -F' ' '{print $2}').chomp
   end
@@ -87,6 +79,10 @@ namespace :stretcher do
 
   def stretcher_hook
     config['stretcher_hook']
+  end
+
+  def stretcher_src
+    config['stretcher_src']
   end
 
   def consul_host
