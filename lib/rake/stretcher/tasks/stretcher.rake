@@ -62,7 +62,7 @@ namespace :stretcher do
   end
 
   def stretcher_src
-    "#{stretcher_path}/#{tarball_name}.tgz"
+    "#{stretcher_path}/#{tarball_name}"
   end
 
   def checksum
@@ -149,7 +149,7 @@ namespace :stretcher do
   desc "create and upload manifest"
   task :create_and_upload_manifest do
     template = File.read(File.expand_path('../../templates/manifest.yml.erb', __FILE__))
-    yaml = YAML.load(ERB.new(%x(cat #{local_build_path}/config/#{stretcher_hook})).result(binding))
+    yaml = YAML.load(ERB.new(IO.read("#{local_build_path}/config/#{stretcher_hook}")).result(binding))
     deploy_roles.each do |role|
       hooks = yaml[role]
       yml = ERB.new(template).result(binding)
