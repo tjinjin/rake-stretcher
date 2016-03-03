@@ -6,7 +6,7 @@ require 'open3'
 namespace :stretcher do
 
   def config
-    config ||= YAML.load_file(File.expand_path('config/stretcher.yml'))
+    config ||= YAML.load(ERB.new(IO.read('config/stretcher.yml')).result)
   end
 
   def local_working_path_base
@@ -62,7 +62,7 @@ namespace :stretcher do
   end
 
   def stretcher_src
-    "#{stretcher_path}/#{tarball_name}-#{environment}.tgz"
+    "#{stretcher_path}/#{tarball_name}.tgz"
   end
 
   def checksum
