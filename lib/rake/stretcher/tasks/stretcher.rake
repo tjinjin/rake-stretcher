@@ -62,7 +62,7 @@ namespace :stretcher do
   end
 
   def stretcher_src
-    "#{stretcher_path}/#{tarball_name}-#{time_now}.tgz"
+    "#{stretcher_path}/#{tarball_name}-#{environment}.tgz"
   end
 
   def checksum
